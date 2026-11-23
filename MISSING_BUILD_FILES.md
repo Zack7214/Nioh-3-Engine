@@ -1,4 +1,24 @@
-# Source files missing from the public repo (EngineFix doesn't link; Training, the checks and the tests need files that aren't there)
+# Source files missing from the public repo
+
+## Status after `1b7c75c` (2026-11-23)
+
+Thanks for the quick fix! With `1b7c75c` ("Add the assembly and assets a clean 1.8.39 build was missing") **all four
+mods build** from a clean checkout: Nioh3EngineFix 1.8.39 links and passes every offline harness, BossRematch 1.5.6
+(with `SoulCoreForms`), CamKiProbe (self-test passes) and Training.
+
+| Item | Status |
+|---|---|
+| 1. EngineFix: 26 missing asm caves | **Fixed** in `1b7c75c` |
+| 2. Training: `style/rank_atlas.png` | **Fixed** in `1b7c75c` |
+| 2. Training: `data/boss-action-record.tsv` | **Fixed** in `1b7c75c` |
+| 3. `re/scripts_re/savecrypt.py` | **Still missing.** `mod/Nioh3EngineFix/build.bat` builds the `.asi`, then exits 1 at `tools/saves/build_live_package.py` (`FileNotFoundError` on `re/scripts_re/savecrypt.py`). |
+| 3. `tools/aob_audit.py` | **Still missing.** `gen_rvas.py` can't create a pattern for a new game address. |
+| 3. Check/test inputs and unpublished generators | **Still missing.** Everything in section 3 apart from `data/boss-action-record.tsv`. |
+
+The highest-value remaining ones are `savecrypt.py` (so `build.bat` finishes with exit 0) and `aob_audit.py` (so
+contributors can add new addresses). The original report follows.
+
+---
 
 Hi! I'm building the mods from a clean clone of `main` (commit `b5f718a`, source v1.8.39) on Windows 11 with
 VS Build Tools 2022 (MSVC 14.44, Windows SDK 10.0.26100) and zig 0.17.1. Three of the four mods build. Two things
