@@ -1,4 +1,4 @@
-# Source files missing from the public repo (Nioh3EngineFix doesn't link; Training needs one extra file)
+# Source files missing from the public repo (EngineFix doesn't link; Training, the checks and the tests need files that aren't there)
 
 Hi! I'm building the mods from a clean clone of `main` (commit `b5f718a`, source v1.8.39) on Windows 11 with
 VS Build Tools 2022 (MSVC 14.44, Windows SDK 10.0.26100) and zig 0.17.1. Three of the four mods build. Two things
@@ -41,5 +41,47 @@ embedded in the v1.8.39 release `Nioh3Training.asi`.) Committing the PNG would f
 Minor: `mod/Nioh3Training/build.bat` ends with `copy ..\..\data\boss-action-record.tsv`, and that file isn't in
 the repo either, so the script exits with 1 after a successful compile. The same table is already committed as
 `mod/Nioh3Training/Nioh3Training_action_records.tsv`.
+
+## 3. Other files that are missing
+
+I checked every path the build, test and tool scripts refer to. These are missing from the repo (no commit has them):
+
+### Needed to build or to add new features
+
+| Missing file | Used by | Effect |
+|---|---|---|
+| `re/scripts_re/savecrypt.py` | `tools/saves/build_live_package.py`, run by `mod/Nioh3EngineFix/build.bat` (save helpers step, after linking) | Even once item 1 is fixed, `build.bat` still exits with 1 at the save helpers step. |
+| `tools/aob_audit.py` | `mod/*/tools/gen_rvas.py` (`import aob_audit`), `tools/check_fixed_rvas.py` | Contributors can't generate a byte pattern for a new game address, so new `rvas.json` entries can't be added. |
+
+### Needed by the checks and tests
+
+| Missing file | Used by |
+|---|---|
+| `MODLOG.md` | `release/check_release.py` (crashes with `FileNotFoundError`) |
+| Commit `d4518e85` (`RELEASE` pin) | `mod/settings/test_catalog.py` (`git show d4518e85:...` fails: that commit isn't in the public history) |
+| `mod/Nioh3EngineFix/tests/vrr_floor_shim.asm` | `tests/run_vrr_floor_harness.py` |
+| `re/scripts_load/ls_sites.py` | `tests/run_loadstats_harness.py`, `run_prefetch_harness.py`, `run_readfix_harness.py` |
+| `re/symbols/symbols.tsv` (old path; the public copy is `symbols/symbols.tsv`) | `tests/run_fnprobe_harness.py` |
+| `tools/testmatrix/padrec.py`, `regsuite.py`, `white_dot_walk.ps1` | `run_padrec_test.py`, `run_holdkeygap_harness.py`, BossRematch `test_white_dot.py` |
+| `site/version.json`, `site/api/crash.py`, `site/tests/*` | `run_updatecheck.py`, `run_crashupload_test.py`, `run_perfsnap_test.py` |
+| `feedback-api/report_api.py`, `gpu-shaders/sweep/build_sweep.py` | `tests/site_perf_check.py`, `tests/run_psoswap_harness.py` |
+| `data/boss-action-record.tsv` | Training `build.bat`/`build.sh` (see item 2), `release/package_final.py` |
+
+### Generators and tools the docs list as not yet published
+
+These are only needed to rebuild the committed tables from game data, but the offline tests below look for them:
+
+- `tools/rematch_catalog.py` (`run_rematch_harness.py`)
+- `tools/auto_arena.py`, `tools/gen_boss_moves.py`, `tools/gen_move_motion.py`, `tools/gen_summon_rows.py` (Training `run_move_toggle_tests.py`, `run_move_toggle_available.py`)
+- `tools/gen_fallback_rosters.py` (`fallback_roster_data_test.py`)
+- `tools/gen_native_entry_gates.py` (BossRematch `test_native_entry_gates.py`)
+- `tools/gen_actionsets.py`, `tools/n3lfm.py`
+- `tools/rematch/verify_all.ps1`, `tools/testhub/hub.py`, `tools/export_public.py`, `tools/setup/`, `tools/updater/update-linux.sh`
+
+## What does work
+
+`generate_catalog.py --check`, `gen_header.py --check`, `generate_menu_defaults.py --check`,
+`symbols/build_exports.py --check` and `check_fixed_rvas.py` all pass. BossRematch and CamKiProbe build cleanly
+(including CamKiProbe's self-test), and EngineFix's offline harnesses all pass before the link step.
 
 Thanks!
